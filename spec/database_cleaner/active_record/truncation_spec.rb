@@ -1,16 +1,15 @@
 require File.dirname(__FILE__) + '/../../spec_helper'
 require 'active_record'
-require 'database_cleaner/active_record/truncation'
 
+require 'database_cleaner/active_record/truncation'
 
 module ActiveRecord
   module ConnectionAdapters
     [MysqlAdapter, Mysql2Adapter, SQLite3Adapter, JdbcAdapter, PostgreSQLAdapter, IBM_DBAdapter].each do |adapter|
       describe adapter, "#truncate_table" do
         it "responds" do
-          adapter.new("foo").should respond_to(:truncate_table)
+          adapter.instance_methods.should include('truncate_table')
         end
-        it "should truncate the table"
       end
     end
   end

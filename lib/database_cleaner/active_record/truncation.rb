@@ -51,6 +51,26 @@ module ActiveRecord
       def truncate_table(table_name)
         execute("TRUNCATE TABLE #{quote_table_name(table_name)};")
       end
+
+      def truncate_table_with_id_reset(table_name)
+        table_count = execute("SELECT COUNT(*) FROM #{quote_table_name(table_name)}").first.first
+        if table_count == 0
+          auto_inc = execute <<-AUTO_INCREMENT
+            SELECT Auto_increment 
+            FROM information_schema.tables 
+            WHERE table_name='#{table_name}';
+          AUTO_INCREMENT
+
+          truncate_table table_name if auto_inc.first.first > 1
+        else
+          truncate_table table_name
+        end
+      end
+
+      def truncate_table_no_id_reset(table_name)
+        table_count = execute("SELECT COUNT(*) FROM #{quote_table_name(table_name)}").first.first
+        truncate_table table_name if table_count > 0
+      end
     end
 
     class IBM_DBAdapter < AbstractAdapter

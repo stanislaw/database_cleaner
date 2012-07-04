@@ -161,12 +161,55 @@ module ActiveRecord
       def truncate_table(table_name)
         truncate_tables([table_name])
       end
-      
+
       def truncate_tables(table_names)
         return if table_names.nil? || table_names.empty?
         execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} #{restart_identity} #{cascade};")
       end
 
+      def fast_truncate_tables *tables_and_opts
+        opts = tables_and_opts.last.is_a?(::Hash) ? tables_and_opts.pop : {}
+        reset_ids = opts[:reset_ids] != false
+
+        _tables = tables_and_opts
+
+        reset_ids ?
+        truncate_tables_with_id_reset(_tables) :
+        truncate_tables_no_id_reset(_tables)
+      end
+
+      def truncate_tables_with_id_reset(_tables)
+        tables_to_truncate = []
+
+        _tables.each do |table|
+          table_last_value = execute(<<-LAST_VALUE
+            SELECT last_value from #{table}_id_seq;
+          LAST_VALUE
+          ).first['last_value'].to_i
+
+          if table_last_value > 1
+            tables_to_truncate << table
+          end
+        end
+
+        truncate_tables tables_to_truncate if tables_to_truncate.any?
+      end
+
+      def truncate_tables_no_id_reset(_tables)
+        tables.each do |table|
+          # Anonymous blocks are supported only in PG9.
+          # It should be somehow rewritten for older versions.
+          table_count = execute(<<-TRUNCATE_IF
+            DO $$DECLARE r record;
+            BEGIN 
+              IF EXISTS(select * from #{table}) THEN
+              TRUNCATE TABLE #{table};
+              END IF;
+            END$$;
+            TRUNCATE_IF
+          )
+        end
+      end
     end
 
     class SQLServerAdapter < AbstractAdapter

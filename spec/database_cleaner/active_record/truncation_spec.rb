@@ -22,7 +22,6 @@ module DatabaseCleaner
     describe Truncation do
       let(:connection) { mock('connection') }
 
-
       before(:each) do
         connection.stub!(:disable_referential_integrity).and_yield
         connection.stub!(:views).and_return([])
@@ -31,7 +30,7 @@ module DatabaseCleaner
 
       it "should truncate all tables except for schema_migrations" do
         connection.stub!(:tables).and_return(%w[schema_migrations widgets dogs])
-        
+
         connection.should_receive(:truncate_tables).with(['widgets', 'dogs'])
         Truncation.new.clean
       end

@@ -3,16 +3,17 @@ require "rubygems"
 require "bundler"
 Bundler.setup
 
+require 'rspec/core'
+require 'rspec/mocks'
 
-require 'spec'
 #require 'active_record'
 #require 'mongo_mapper'
+
 $:.unshift(File.dirname(__FILE__) + '/../lib')
+
 require 'database_cleaner'
 
-
-
-Spec::Runner.configure do |config|
+RSpec.configure do |config|
 
 end
 

@@ -105,6 +105,7 @@ GEM
       mongo (~> 1.0.1)
       will_paginate (< 2.9)
     multi_json (1.0.4)
+    mysql (2.8.1)
     mysql2 (0.2.18)
     plucky (0.3.5)
       mongo (~> 1.0.8)
@@ -164,6 +165,7 @@ DEPENDENCIES
   json_pure
   mongo_mapper (= 0.8.2)
   mongoid (= 1.9.1)
+  mysql
   mysql2 (~> 0.2.0)
   rake
   rcov

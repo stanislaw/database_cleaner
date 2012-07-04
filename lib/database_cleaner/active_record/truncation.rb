@@ -45,6 +45,40 @@ module ActiveRecord
       def truncate_table(table_name)
         execute("TRUNCATE TABLE #{quote_table_name(table_name)};")
       end
+
+      def fast_truncate_tables *tables_and_opts
+        opts = tables_and_opts.last.is_a?(::Hash) ? tables_and_opts.pop : {}
+        reset_ids = opts[:reset_ids] != false
+
+        _tables = tables_and_opts
+
+        _tables.each do |table_name|
+          reset_ids ?
+            truncate_table_with_id_reset(table_name) :
+            truncate_table_no_id_reset(table_name)
+        end
+      end
+
+      def truncate_table_with_id_reset(table_name)
+        table_count = execute("SELECT COUNT(*) FROM #{quote_table_name(table_name)}").fetch_row.first.to_i
+
+        if table_count == 0
+          auto_inc = execute <<-AUTO_INCREMENT
+              SELECT Auto_increment 
+              FROM information_schema.tables 
+              WHERE table_name='#{table_name}';
+          AUTO_INCREMENT
+
+          truncate_table table_name if auto_inc.fetch_row.first.to_i > 1
+        else
+          truncate_table table_name
+        end
+      end
+
+      def truncate_table_no_id_reset(table_name)
+        table_count = execute("SELECT COUNT(*) FROM #{quote_table_name(table_name)}").fetch_row.first.to_i
+        truncate_table table_name if table_count > 0
+      end
     end
 
     class Mysql2Adapter < MYSQL2_ADAPTER_PARENT
@@ -52,13 +86,26 @@ module ActiveRecord
         execute("TRUNCATE TABLE #{quote_table_name(table_name)};")
       end
 
+      def fast_truncate_tables *tables_and_opts
+        opts = tables_and_opts.last.is_a?(::Hash) ? tables_and_opts.pop : {}
+        reset_ids = opts[:reset_ids] != false
+
+        _tables = tables_and_opts
+
+        _tables.each do |table_name|
+          reset_ids ?
+            truncate_table_with_id_reset(table_name) :
+            truncate_table_no_id_reset(table_name)
+        end
+      end
+
       def truncate_table_with_id_reset(table_name)
         table_count = execute("SELECT COUNT(*) FROM #{quote_table_name(table_name)}").first.first
         if table_count == 0
           auto_inc = execute <<-AUTO_INCREMENT
-            SELECT Auto_increment 
-            FROM information_schema.tables 
-            WHERE table_name='#{table_name}';
+              SELECT Auto_increment 
+              FROM information_schema.tables 
+              WHERE table_name='#{table_name}';
           AUTO_INCREMENT
 
           truncate_table table_name if auto_inc.first.first > 1
@@ -150,6 +197,8 @@ module DatabaseCleaner::ActiveRecord
     def clean
       connection = connection_klass.connection
       connection.disable_referential_integrity do
+        connection.respond_to?(:fast_truncate_tables) ?
+        connection.fast_truncate_tables(tables_to_truncate(connection), {:reset_ids => reset_ids?}) :
         connection.truncate_tables(tables_to_truncate(connection))
       end
     end
@@ -165,6 +214,9 @@ module DatabaseCleaner::ActiveRecord
       'schema_migrations'
     end
 
+    def reset_ids?
+      @reset_ids != false
+    end
   end
 end
 

@@ -3,7 +3,7 @@ puts "Active Record #{ActiveRecord::VERSION::STRING}"
 ActiveRecord::Base.logger = Logger.new(STDERR)
 
 db_spec = {
-  :adapter  => 'mysql',
+  :adapter  => 'mysql2',
   :host => 'localhost',
   :username => 'root',
   :password => '',

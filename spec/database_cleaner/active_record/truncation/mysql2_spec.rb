@@ -1,12 +1,12 @@
 require 'spec_helper'
 require 'active_record'
-require 'support/active_record/mysql_setup'
+require 'support/active_record/mysql2_setup'
 require 'database_cleaner/active_record/truncation'
 
 module ActiveRecord
   module ConnectionAdapters
     describe do 
-      let(:adapter) { MysqlAdapter }
+      let(:adapter) { Mysql2Adapter }
       let(:connection) { ActiveRecord::Base.connection }
 
       describe "#truncate_table" do
@@ -74,7 +74,7 @@ module ActiveRecord
           User.create.id.should == 3
         end
       end
-
+      
       describe "#fast_truncate_tables" do
         it "responds" do
           adapter.instance_methods.should include('fast_truncate_tables')
@@ -92,6 +92,7 @@ module ActiveRecord
           connection.fast_truncate_tables(connection.tables, :reset_ids => false)
         end
       end
+
     end
   end
 end

@@ -2,7 +2,7 @@ module DatabaseCleaner
   module Generic
     module Truncation
       def initialize(opts={})
-        if !opts.empty? && !(opts.keys - [:only, :except]).empty?
+        if !opts.empty? && !(opts.keys - [:only, :except, :reset_ids]).empty?
           raise ArgumentError, "The only valid options are :only and :except. You specified #{opts.keys.join(',')}."
         end
         if opts.has_key?(:only) && opts.has_key?(:except)
@@ -12,6 +12,7 @@ module DatabaseCleaner
         @only = opts[:only]
         @tables_to_exclude = (opts[:except] || []).dup
         @tables_to_exclude << migration_storage_name if migration_storage_name
+        @reset_ids = opts[:reset_ids]
       end
 
       def start

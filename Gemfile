@@ -34,7 +34,7 @@ group :development do
   gem "couch_potato",         "0.3.0"
   gem "sequel",               "~>3.21.0"
   #gem "ibm_db"  # I don't want to add this dependency, even as a dev one since it requires DB2 to be installed
-
+  gem 'mysql'
   gem 'mysql2', '~> 0.2.0'
 end
 
